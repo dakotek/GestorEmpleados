@@ -6,9 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
+
 import model.Departamento;
 import model.Empleado;
 
@@ -38,7 +37,6 @@ public class Empresa {
         }
     }
 
-    // Método para crear la tabla de departamentos
     private void crearTablaDepartamentos() {
         sql = "CREATE TABLE IF NOT EXISTS departamentos (" +
                 "id STRING PRIMARY KEY," +
@@ -51,7 +49,6 @@ public class Empresa {
         }
     }
 
-    // Método para crear la tabla de empleados
     private void crearTablaEmpleados() {
         sql = "CREATE TABLE IF NOT EXISTS empleados (" +
                 "id STRING PRIMARY KEY," +
@@ -67,32 +64,114 @@ public class Empresa {
     }
 
     public boolean agregarDepartamento(Departamento departamento) {
-    	
-        return false;
+    	sql = "INSERT INTO departamentos (id, nombre, jefe) VALUES (?, ?, ?)";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, departamento.getId().toString());
+            ps.setString(2, departamento.getNombre());
+            ps.setString(3, departamento.getJefe() != null ? departamento.getJefe().toString() : null);
+            
+            int filasAfectadas = ps.executeUpdate();
+            
+            return filasAfectadas > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean eliminarDepartamento(String id) {
-    	
-        return false;
+    	sql = "DELETE FROM departamentos WHERE id = ?";
+
+		try (PreparedStatement ps = conn.prepareStatement(sql)) {
+			ps.setString(1, id);
+			int filasAfectadas = ps.executeUpdate();
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
     }
 
     public String mostrarDepartamentos() {
+    	StringBuilder sb = new StringBuilder();
+        sql = "SELECT * FROM departamentos";
         
-        return "";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                UUID id = UUID.fromString(rs.getString("id"));
+                String nombre = rs.getString("nombre");
+                UUID jefe = null;
+                if (rs.getString("jefe") != null) {
+                    jefe = UUID.fromString(rs.getString("jefe"));
+                }
+                Departamento departamento = new Departamento(id, nombre, jefe);
+                sb.append(departamento.toString());
+                sb.append("\n");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
     }
 
     public boolean agregarEmpleado(Empleado empleado) {
+    	sql = "INSERT INTO empleados (id, nombre, salario, fecha, departamento) VALUES (?, ?, ?, ?, ?)";
         
-        return false;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, empleado.getId().toString());
+            ps.setString(2, empleado.getNombre());
+            ps.setInt(3, empleado.getSalario());
+            ps.setString(4, empleado.getFecha());
+            ps.setString(5, empleado.getDepartamento() != null ? empleado.getDepartamento().toString() : null);
+            
+            int filasAfectadas = ps.executeUpdate();
+            
+            return filasAfectadas > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean eliminarEmpleado(String id) {
-        
-        return false;
+    	sql = "DELETE FROM empleados WHERE id = ?";
+
+		try (PreparedStatement ps = conn.prepareStatement(sql)) {
+			ps.setString(1, id);
+			int filasAfectadas = ps.executeUpdate();
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
     }
 
     public String mostrarEmpleados() {
+    	StringBuilder sb = new StringBuilder();
+        sql = "SELECT * FROM empleados";
         
-        return "";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                UUID id = UUID.fromString(rs.getString("id"));
+                String nombre = rs.getString("nombre");
+                int salario = rs.getInt("salario");
+                String fecha = rs.getString("fecha");
+                UUID departamento = null;
+                if (rs.getString("departamento") != null) {
+                    departamento = UUID.fromString(rs.getString("departamento"));
+                }
+                Empleado empleado = new Empleado(id, nombre, salario, fecha, departamento);
+                sb.append(empleado.toString());
+                sb.append("\n");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
     }
 }
