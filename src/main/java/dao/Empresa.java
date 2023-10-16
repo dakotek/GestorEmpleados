@@ -15,7 +15,10 @@ public class Empresa {
     Connection conn;
     String dsn = "jdbc:sqlite:empresa.sqlite";
     String sql;
-
+    
+    /**
+	 * Constructor
+	 */
     public Empresa() {
         try {
             conn = DriverManager.getConnection(dsn);
@@ -27,6 +30,9 @@ public class Empresa {
         }
     }
 
+    /**
+	 * Cierra la conexión a la BBDD
+	 */
     public void close() {
         try {
             if (conn != null) {
@@ -37,6 +43,9 @@ public class Empresa {
         }
     }
 
+    /**
+     * Crea la tabla "departamentos" si no existe en la base de datos
+     */
     private void crearTablaDepartamentos() {
         sql = "CREATE TABLE IF NOT EXISTS departamentos (" +
                 "id STRING PRIMARY KEY," +
@@ -49,6 +58,9 @@ public class Empresa {
         }
     }
 
+    /**
+     * Crea la tabla "empleados" si no existe en la base de datos
+     */
     private void crearTablaEmpleados() {
         sql = "CREATE TABLE IF NOT EXISTS empleados (" +
                 "id STRING PRIMARY KEY," +
@@ -63,6 +75,12 @@ public class Empresa {
         }
     }
 
+    /**
+     * Agrega un nuevo departamento a la BBDD
+     * 
+     * @param departamento Departamento a agregar
+     * @return true si se agregó con éxito, false si no se pudo agregar
+     */
     public boolean agregarDepartamento(Departamento departamento) {
     	sql = "INSERT INTO departamentos (id, nombre, jefe) VALUES (?, ?, ?)";
         
@@ -80,6 +98,12 @@ public class Empresa {
         }
     }
 
+    /**
+     * Elimina un departamento de la BBDD por su ID
+     * 
+     * @param id ID del departamento a eliminar
+     * @return true si se eliminó con éxito, false si no se pudo eliminar
+     */
     public boolean eliminarDepartamento(String id) {
     	sql = "DELETE FROM departamentos WHERE id = ?";
 
@@ -93,6 +117,11 @@ public class Empresa {
 		}
     }
 
+    /**
+     * Muestra todos los departamentos
+     * 
+     * @return Una cadena con la lista de departamentos
+     */
     public String mostrarDepartamentos() {
     	StringBuilder sb = new StringBuilder();
         sql = "SELECT * FROM departamentos";
@@ -117,6 +146,12 @@ public class Empresa {
         return sb.toString();
     }
     
+    /**
+     * Busca un departamento por su ID
+     * 
+     * @param id ID del departamento a buscar
+     * @return Departamento encontrado o null si no se encuentra
+     */
     public Departamento obtenerDepartamentoPorID(UUID id) {
         String sql = "SELECT * FROM departamentos WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -134,6 +169,12 @@ public class Empresa {
         return null;
     }
 
+    /**
+     * Actualiza un departamento en la BBDD
+     * 
+     * @param departamento Departamento a actualizar
+     * @return true si se actualizó con éxito, false si no se pudo actualizar
+     */
     public boolean actualizarDepartamento(Departamento departamento) {
         String sql = "UPDATE departamentos SET nombre = ?, jefe = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -148,6 +189,12 @@ public class Empresa {
         }
     }
 
+    /**
+     * Agrega un nuevo empleado a la BBDD
+     * 
+     * @param empleado Empleado a agregar
+     * @return true si se agregó con éxito, false si no se pudo agregar
+     */
     public boolean agregarEmpleado(Empleado empleado) {
     	sql = "INSERT INTO empleados (id, nombre, salario, fecha, departamento) VALUES (?, ?, ?, ?, ?)";
         
@@ -167,6 +214,12 @@ public class Empresa {
         }
     }
 
+    /**
+     * Elimina un empleado de la BBDD por su ID
+     * 
+     * @param id ID del empleado a eliminar
+     * @return true si se eliminó con éxito, false si no se pudo eliminar
+     */
     public boolean eliminarEmpleado(String id) {
     	sql = "DELETE FROM empleados WHERE id = ?";
 
@@ -180,6 +233,11 @@ public class Empresa {
 		}
     }
 
+    /**
+     * Muestra todos los empleados
+     * 
+     * @return Una cadena con la lista de empleados
+     */
     public String mostrarEmpleados() {
     	StringBuilder sb = new StringBuilder();
         sql = "SELECT * FROM empleados";
@@ -206,6 +264,12 @@ public class Empresa {
         return sb.toString();
     }
 
+    /**
+     * Busca un empleado por su ID
+     * 
+     * @param id ID del empleado a buscar
+     * @return Empleado encontrado o null si no se encuentra
+     */
     public Empleado obtenerEmpleadoPorID(UUID id) {
         String sql = "SELECT * FROM empleados WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -225,6 +289,12 @@ public class Empresa {
         return null;
     }
     
+    /**
+     * Actualiza un empleado en la BBDD
+     * 
+     * @param empleado Empleado a actualizar
+     * @return true si se actualizó con éxito, false si no se pudo actualizar
+     */
     public boolean actualizarEmpleado(Empleado empleado) {
         String sql = "UPDATE empleados SET nombre = ?, salario = ?, fecha = ?, departamento = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -239,8 +309,5 @@ public class Empresa {
             e.printStackTrace();
             return false;
         }
-    }
-
-    
-    
+    }    
 }
