@@ -16,12 +16,12 @@ public class Empleado {
 	String fecha;
 	UUID departamento;
 
-	public Empleado(String nombre, int salario, String fecha) {
+	public Empleado(String nombre, int salario, String fecha, UUID departamento) {
 		setId(UUID.randomUUID());
 		setNombre(nombre);
 		setSalario(salario);
 		setFecha(fecha);
-		setDepartamento(null);
+		setDepartamento(departamento);
 	}
 	
 	public String toString() {

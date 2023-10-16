@@ -14,10 +14,10 @@ public class Departamento {
 	String nombre; 
 	UUID jefe;
 
-	public Departamento(String nombre) {
+	public Departamento(String nombre, UUID jefe) {
 		setId(UUID.randomUUID());
 		setNombre(nombre);
-		setJefe(null);
+		setJefe(jefe);
 	}
 	
 	public String toString() {
