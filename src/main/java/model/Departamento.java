@@ -20,6 +20,10 @@ public class Departamento {
 		setJefe(jefe);
 	}
 	
+	public void cambiarJefe(UUID nuevoJefe) {
+	    this.jefe = nuevoJefe;
+	}
+	
 	public String toString() {
 		return String.format("%s | %s | %s ", id, nombre, jefe);
 		

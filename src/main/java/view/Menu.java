@@ -12,14 +12,16 @@ public class Menu {
         Empresa empresa = new Empresa();
 
         while (true) {
-            System.out.println("Selecciona una opción (1 a 7):\n" + 
+            System.out.println("Selecciona una opción (1 a 9):\n" + 
                     "1. Mostrar departamentos\n" + 
                     "2. Agregar departamentos\n" + 
                     "3. Eliminar departamentos\n" + 
                     "4. Mostrar empleados\n" + 
                     "5. Agregar empleados\n" + 
                     "6. Eliminar empleados\n" + 
-                    "7. Cerrar programa");
+                    "7. Cambiar jefe al departamento\n" + 
+                    "8. Cambiar departamento al empleado\n" + 
+                    "9. Cerrar programa");
 
             switch (IO.readInt()) {
                 case 1:
@@ -41,6 +43,12 @@ public class Menu {
                     eliminarEmpleado(empresa);
                     break;
                 case 7:
+                    cambiarJefeDepartamento(empresa);
+                    break;
+                case 8:
+                    cambiarDepartamentoEmpleado(empresa);
+                    break;
+                case 9:
                     cerrarEmpresa(empresa);
                     return;
                 default:
@@ -130,6 +138,83 @@ public class Menu {
             System.out.println("No se pudo eliminar el empleado.");
         }
     }
+    
+    private static void cambiarJefeDepartamento(Empresa empresa) {
+        System.out.print("ID del departamento al que deseas cambiar el jefe: ");
+        String idDepartamento = IO.readString();
+
+        System.out.print("Nuevo ID del jefe: ");
+        String idJefe = IO.readString();
+
+        try {
+        UUID departamentoID = UUID.fromString(idDepartamento);
+        UUID jefeID = UUID.fromString(idJefe);
+
+        Departamento departamento = empresa.obtenerDepartamentoPorID(departamentoID);
+        
+        if (departamento != null) {
+            departamento.cambiarJefe(jefeID);
+            boolean actualizadoDepartamento = empresa.actualizarDepartamento(departamento);
+
+            if (actualizadoDepartamento) {
+                System.out.println("Jefe del departamento cambiado con éxito.");
+
+                // Actualizar el departamento del nuevo jefe
+                Empleado nuevoJefe = empresa.obtenerEmpleadoPorID(jefeID);
+
+                if (nuevoJefe != null) {
+                    nuevoJefe.cambiarDepartamento(departamentoID);
+                    boolean actualizadoNuevoJefe = empresa.actualizarEmpleado(nuevoJefe);
+
+                    if (actualizadoNuevoJefe) {
+                        System.out.println("Departamento del nuevo jefe actualizado.");
+                    } else {
+                        System.out.println("No se pudo actualizar el departamento del nuevo jefe.");
+                    }
+                } else {
+                    System.out.println("El nuevo jefe especificado no existe.");
+                }
+            } else {
+                System.out.println("No se pudo cambiar el jefe del departamento.");
+            }
+        } else {
+            System.out.println("El departamento especificado no existe.");
+        }
+        } catch (Exception e) {
+        	System.out.println("Los IDs introducios no son válidos");;
+        }
+    }
+
+
+    private static void cambiarDepartamentoEmpleado(Empresa empresa) {
+        System.out.print("ID del empleado al que deseas cambiar el departamento: ");
+        String idEmpleado = IO.readString();
+
+        System.out.print("Nuevo ID del departamento: ");
+        String idDepartamento = IO.readString();
+        
+        try {
+        UUID empleadoID = UUID.fromString(idEmpleado);
+        UUID departamentoID = UUID.fromString(idDepartamento);
+
+        Empleado empleado = empresa.obtenerEmpleadoPorID(empleadoID);
+        if (empleado != null) {
+            empleado.cambiarDepartamento(departamentoID);
+            boolean actualizado = empresa.actualizarEmpleado(empleado);
+            
+            if (actualizado) {
+                System.out.println("Departamento del empleado cambiado con éxito.");
+            } else {
+                System.out.println("No se pudo cambiar el departamento del empleado.");
+            }
+        } else {
+            System.out.println("El empleado especificado no existe.");
+        }
+        } catch (Exception e) {
+        	System.out.println("Los IDs introducios no son válidos");;
+        }
+    }
+
 
     private static void cerrarEmpresa(Empresa empresa) {
         empresa.close();

@@ -24,6 +24,10 @@ public class Empleado {
 		setDepartamento(departamento);
 	}
 	
+	public void cambiarDepartamento(UUID nuevoDepartamento) {
+	    this.departamento = nuevoDepartamento;
+	}
+	
 	public String toString() {
 		return String.format("%s | %s | %d | %s | %s", id, nombre, salario, fecha, departamento);
 		

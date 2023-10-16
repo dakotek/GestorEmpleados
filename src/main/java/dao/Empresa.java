@@ -116,6 +116,37 @@ public class Empresa {
 
         return sb.toString();
     }
+    
+    public Departamento obtenerDepartamentoPorID(UUID id) {
+        String sql = "SELECT * FROM departamentos WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id.toString());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                UUID departamentoId = UUID.fromString(rs.getString("id"));
+                String nombre = rs.getString("nombre");
+                UUID jefeId = rs.getString("jefe") != null ? UUID.fromString(rs.getString("jefe")) : null;
+                return new Departamento(departamentoId, nombre, jefeId);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean actualizarDepartamento(Departamento departamento) {
+        String sql = "UPDATE departamentos SET nombre = ?, jefe = ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, departamento.getNombre());
+            ps.setString(2, departamento.getJefe() != null ? departamento.getJefe().toString() : null);
+            ps.setString(3, departamento.getId().toString());
+            int filasAfectadas = ps.executeUpdate();
+            return filasAfectadas > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     public boolean agregarEmpleado(Empleado empleado) {
     	sql = "INSERT INTO empleados (id, nombre, salario, fecha, departamento) VALUES (?, ?, ?, ?, ?)";
@@ -174,4 +205,42 @@ public class Empresa {
 
         return sb.toString();
     }
+
+    public Empleado obtenerEmpleadoPorID(UUID id) {
+        String sql = "SELECT * FROM empleados WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id.toString());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                UUID empleadoId = UUID.fromString(rs.getString("id"));
+                String nombre = rs.getString("nombre");
+                int salario = rs.getInt("salario");
+                String fecha = rs.getString("fecha");
+                UUID departamentoId = rs.getString("departamento") != null ? UUID.fromString(rs.getString("departamento")) : null;
+                return new Empleado(empleadoId, nombre, salario, fecha, departamentoId);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public boolean actualizarEmpleado(Empleado empleado) {
+        String sql = "UPDATE empleados SET nombre = ?, salario = ?, fecha = ?, departamento = ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, empleado.getNombre());
+            ps.setInt(2, empleado.getSalario());
+            ps.setString(3, empleado.getFecha());
+            ps.setString(4, empleado.getDepartamento() != null ? empleado.getDepartamento().toString() : null);
+            ps.setString(5, empleado.getId().toString());
+            int filasAfectadas = ps.executeUpdate();
+            return filasAfectadas > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    
+    
 }
