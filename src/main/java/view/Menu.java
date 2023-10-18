@@ -296,7 +296,7 @@ public class Menu {
 				System.out.println("No se pudo cambiar el departamento del empleado.");
 			}
 		} catch (Exception e) {
-			System.out.println("Para cambiar el departamento, primero debes asignarle como jefe");
+			System.out.println("Para asignar este departamento al empleado, primero debe de tener un jefe");
 		}
 	}
 
