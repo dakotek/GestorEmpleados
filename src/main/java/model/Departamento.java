@@ -1,4 +1,5 @@
 package model;
+
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -10,22 +11,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Departamento {
 	
-	UUID id; 
-	String nombre; 
-	UUID jefe;
+	private UUID id; 
+	private String nombre; 
+	private Empleado jefe;
 
-	public Departamento(String nombre, UUID jefe) {
+	public Departamento(String nombre, Empleado jefe) {
 		setId(UUID.randomUUID());
 		setNombre(nombre);
 		setJefe(jefe);
 	}
 	
-	public void cambiarJefe(UUID nuevoJefe) {
+	public void cambiarJefe(Empleado nuevoJefe) {
 	    this.jefe = nuevoJefe;
 	}
 	
 	public String toString() {
-		return String.format("%s | %s | %s ", id, nombre, jefe);
+		String jefeStr = (jefe != null) ? jefe.getId().toString() : "Sin jefe";
+	    return String.format("ID: %s, Nombre: %s, Jefe: %s", id.toString(), nombre, jefeStr);
 		
 	}
 }

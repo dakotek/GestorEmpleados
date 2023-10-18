@@ -1,4 +1,5 @@
 package model;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -10,13 +11,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Empleado {
 	
-	UUID id; 
-	String nombre; 
-	int salario; 
-	String fecha;
-	UUID departamento;
+	private UUID id; 
+	private String nombre; 
+	private Double salario; 
+	private LocalDate fecha;
+	private Departamento departamento;
 
-	public Empleado(String nombre, int salario, String fecha, UUID departamento) {
+	public Empleado(String nombre, Double salario, LocalDate fecha, Departamento departamento) {
 		setId(UUID.randomUUID());
 		setNombre(nombre);
 		setSalario(salario);
@@ -24,12 +25,13 @@ public class Empleado {
 		setDepartamento(departamento);
 	}
 	
-	public void cambiarDepartamento(UUID nuevoDepartamento) {
+	public void cambiarDepartamento(Departamento nuevoDepartamento) {
 	    this.departamento = nuevoDepartamento;
 	}
 	
 	public String toString() {
-		return String.format("%s | %s | %d | %s | %s", id, nombre, salario, fecha, departamento);
+		String departamentoStr = (departamento != null) ? departamento.getNombre() : "Sin departamento";
+	    return String.format("ID: %s, Nombre: %s, Salario: %.2f, Fecha: %s, Departamento: %s", id.toString(), nombre, salario, fecha.toString(), departamentoStr);
 		
 	}
 }

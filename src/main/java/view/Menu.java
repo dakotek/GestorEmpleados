@@ -1,5 +1,7 @@
 package view;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 import dao.Empresa;
@@ -14,8 +16,8 @@ public class Menu {
 		while (true) {
 			System.out.println("Selecciona una opción (1 a 9):\n" + "1. Mostrar departamentos\n"
 					+ "2. Agregar departamentos\n" + "3. Eliminar departamentos\n" + "4. Mostrar empleados\n"
-					+ "5. Agregar empleados\n" + "6. Eliminar empleados\n" + "7. Cambiar jefe al departamento\n"
-					+ "8. Cambiar departamento al empleado\n" + "9. Cerrar programa");
+					+ "5. Agregar empleados\n" + "6. Eliminar empleados\n" + 
+					"7. Cambiar jefe\n" + "8. Cambiar departamento\n" + "9. Cerrar programa");
 
 			switch (IO.readInt()) {
 			case 1:
@@ -63,41 +65,71 @@ public class Menu {
 	 * Opcion 2 Agregar nuevo departamento
 	 */
 	private static void agregarDepartamento(Empresa empresa) {
-		System.out.print("Nombre del departamento: ");
-		String nombre = IO.readString();
+	    System.out.print("Nombre del departamento: ");
+	    String nombre = IO.readString();
 
-		System.out.print("ID del jefe (ENTER para no añadir - NULL): ");
-		String jefeInput = IO.readString();
-		UUID jefe = null;
+	    if (nombre != null && !nombre.isEmpty()) {
+	        System.out.print("ID del jefe (ENTER para no añadir): ");
+	        String jefeIdInput = IO.readString();
+	        UUID jefeId = null;
 
-		if (!jefeInput.isEmpty()) {
-			jefe = UUID.fromString(jefeInput);
-		}
+	        if (!jefeIdInput.isEmpty()) {
+	            try {
+	                jefeId = UUID.fromString(jefeIdInput);
+	            } catch (IllegalArgumentException e) {
+	                System.out.println("ID de jefe no válido. Se establecerá sin jefe.");
+	            }
+	        }
 
-		Departamento departamento = new Departamento(nombre, jefe);
+	        Empleado jefe = null;
+	        if (jefeId != null) {
+	            jefe = empresa.obtenerEmpleadoPorID(jefeId);
+	            if (jefe == null) {
+	                System.out.println("El ID de jefe especificado no corresponde a un empleado existente. Se establecerá sin jefe.");
+	                jefeId = null;
+	            }
+	        }
 
-		boolean agregado = empresa.agregarDepartamento(departamento);
+	        Departamento departamento = new Departamento(nombre, jefe);
 
-		if (agregado) {
-			System.out.println("Departamento agregado con éxito.");
-		} else {
-			System.out.println("No se pudo agregar el departamento.");
-		}
+	        boolean agregado = empresa.agregarDepartamento(departamento);
+
+	        if (agregado) {
+	            System.out.println("Departamento agregado con éxito.");
+	        } else {
+	            System.out.println("No se pudo agregar el departamento.");
+	        }
+	    } else {
+	        System.out.println("El nombre del departamento no puede ser nulo o vacío.");
+	    }
 	}
+
+
 
 	/*
 	 * Opcion 3 Eliminar un departamento existente
 	 */
 	private static void eliminarDepartamento(Empresa empresa) {
-		System.out.print("ID del departamento a eliminar: ");
-		String id = IO.readString();
-		boolean eliminado = empresa.eliminarDepartamento(id);
-		if (eliminado) {
-			System.out.println("Departamento eliminado con éxito.");
-		} else {
-			System.out.println("No se pudo eliminar el departamento.");
-		}
+	    System.out.print("ID del departamento a eliminar (en formato UUID): ");
+	    String idInput = IO.readString();
+	    UUID id = null;
+
+	    try {
+	        id = UUID.fromString(idInput); // Convertir a UUID
+	    } catch (IllegalArgumentException e) {
+	        System.out.println("ID de departamento no válido.");
+	        return;
+	    }
+
+	    boolean eliminado = empresa.eliminarDepartamento(id);
+
+	    if (eliminado) {
+	        System.out.println("Departamento eliminado con éxito.");
+	    } else {
+	        System.out.println("No se pudo eliminar el departamento.");
+	    }
 	}
+
 
 	/*
 	 * Opcion 4 Mostrar la lista de empleados
@@ -111,140 +143,177 @@ public class Menu {
 	 * Opcion 5 Agregar nuevo empleado
 	 */
 	private static void agregarEmpleado(Empresa empresa) {
-		System.out.print("Nombre del empleado: ");
-		String nombre = IO.readString();
-		System.out.print("Salario: ");
-		int salario = IO.readInt();
-		System.out.print("Fecha de ingreso: ");
-		String fecha = IO.readString();
+	    System.out.print("Nombre del empleado: ");
+	    String nombre = IO.readString();
+	    System.out.print("Salario: ");
+	    double salario = IO.readDouble();
+	    LocalDate fecha = obtenerFechaValida();
 
-		System.out.print("ID del departamento (ENTER para no añadir - NULL): ");
-		String departamentoInput = IO.readString();
-		UUID departamento = null;
+	    System.out.print("ID del departamento (ENTER para no añadir): ");
+	    String departamentoIdInput = IO.readString();
+	    UUID departamentoId = null; // Valor predeterminado es null
 
-		if (!departamentoInput.isEmpty()) {
-			departamento = UUID.fromString(departamentoInput);
-		}
+	    if (!departamentoIdInput.isEmpty()) {
+	        try {
+	            departamentoId = UUID.fromString(departamentoIdInput);
+	        } catch (IllegalArgumentException e) {
+	            System.out.println("ID de departamento no válido. No se establecerá el departamento.");
+	        }
+	    }
 
-		Empleado empleado = new Empleado(nombre, salario, fecha, departamento);
+	    Departamento departamento = null;
+	    if (departamentoId != null) {
+	        departamento = empresa.obtenerDepartamentoPorID(departamentoId);
+	        if (departamento == null) {
+	            System.out.println("El ID de departamento especificado no corresponde a un departamento existente. No se establecerá el departamento.");
+	        }
+	    }
 
-		boolean agregado = empresa.agregarEmpleado(empleado);
+	    Empleado empleado = new Empleado(nombre, salario, fecha, departamento);
 
-		if (agregado) {
-			System.out.println("Empleado agregado con éxito.");
-		} else {
-			System.out.println("No se pudo agregar el empleado.");
-		}
+	    boolean agregado = empresa.agregarEmpleado(empleado);
+
+	    if (agregado) {
+	        System.out.println("Empleado agregado con éxito.");
+	    } else {
+	        System.out.println("No se pudo agregar el empleado.");
+	    }
 	}
+
 
 	/*
 	 * Opcion 6 Eliminar un empleado existente
 	 */
 	private static void eliminarEmpleado(Empresa empresa) {
-		System.out.print("ID del empleado a eliminar: ");
-		String id = IO.readString();
-		boolean eliminado = empresa.eliminarEmpleado(id);
-		if (eliminado) {
-			System.out.println("Empleado eliminado con éxito.");
-		} else {
-			System.out.println("No se pudo eliminar el empleado.");
-		}
+	    System.out.print("ID del empleado a eliminar: ");
+	    String idInput = IO.readString();
+	    
+	    try {
+	        UUID id = UUID.fromString(idInput);
+	        boolean eliminado = empresa.eliminarEmpleado(id);
+	        if (eliminado) {
+	            System.out.println("Empleado eliminado con éxito.");
+	        } else {
+	            System.out.println("No se pudo eliminar el empleado.");
+	        }
+	    } catch (IllegalArgumentException e) {
+	        System.out.println("ID de empleado no válido. No se pudo eliminar el empleado.");
+	    }
 	}
 
 	/*
-	 * Opcion 7 Cambiar el jefe de un departamento
+	 * Opcion 7 cambiar jefe al departamento
 	 */
 	private static void cambiarJefeDepartamento(Empresa empresa) {
-		System.out.print("ID del departamento al que deseas cambiar el jefe: ");
-		String idDepartamento = IO.readString();
+	    System.out.print("ID del departamento al que deseas cambiar el jefe: ");
+	    String departamentoIdInput = IO.readString();
+	    UUID departamentoId = null;
 
-		System.out.print("Nuevo ID del jefe: ");
-		String idJefe = IO.readString();
+	    try {
+	        departamentoId = UUID.fromString(departamentoIdInput);
+	    } catch (IllegalArgumentException e) {
+	        System.out.println("ID de departamento no válido.");
+	        return;
+	    }
 
-		try {
-			UUID departamentoID = UUID.fromString(idDepartamento);
-			UUID jefeID = UUID.fromString(idJefe);
+	    System.out.print("ID del nuevo jefe (ENTER para eliminar el jefe actual): ");
+	    String nuevoJefeIdInput = IO.readString();
+	    UUID nuevoJefeId = null;
 
-			Departamento departamento = empresa.obtenerDepartamentoPorID(departamentoID);
+	    if (!nuevoJefeIdInput.isEmpty()) {
+	        try {
+	            nuevoJefeId = UUID.fromString(nuevoJefeIdInput);
+	        } catch (IllegalArgumentException e) {
+	            System.out.println("ID de jefe no válido. No se cambiará el jefe.");
+	        }
+	    }
 
-			if (departamento != null) {
-				// Cambiar el jefe del departamento al ID del nuevo jefe
-				departamento.cambiarJefe(jefeID);
-				// Actualizar el departamento con el nuevo jefe en la base de datos
-				boolean actualizadoDepartamento = empresa.actualizarDepartamento(departamento);
+	    Empleado nuevoJefe = null;
+	    if (nuevoJefeId != null) {
+	        nuevoJefe = empresa.obtenerEmpleadoPorID(nuevoJefeId);
+	        if (nuevoJefe == null) {
+	            System.out.println("El ID de jefe especificado no corresponde a un empleado existente. No se cambiará el jefe.");
+	            nuevoJefeId = null;
+	        }
+	    }
 
-				if (actualizadoDepartamento) {
-					System.out.println("Jefe del departamento cambiado con éxito.");
+	    boolean cambiado = empresa.cambiarJefeDepartamento(departamentoId, nuevoJefe);
 
-					// Obtener información del nuevo jefe a partir de su ID
-					Empleado nuevoJefe = empresa.obtenerEmpleadoPorID(jefeID);
-
-					if (nuevoJefe != null) {
-						// Cambiar el departamento del nuevo jefe al departamento especificado
-						nuevoJefe.cambiarDepartamento(departamentoID);
-						// Actualizar el registro del nuevo jefe en la base de datos
-						boolean actualizadoNuevoJefe = empresa.actualizarEmpleado(nuevoJefe);
-
-						if (actualizadoNuevoJefe) {
-							System.out.println("Departamento del nuevo jefe actualizado.");
-						} else {
-							System.out.println("No se pudo actualizar el departamento del nuevo jefe.");
-						}
-					} else {
-						System.out.println("El nuevo jefe especificado no existe.");
-					}
-				} else {
-					System.out.println("No se pudo cambiar el jefe del departamento.");
-				}
-			} else {
-				System.out.println("El departamento especificado no existe.");
-			}
-		} catch (Exception e) {
-			System.out.println("Los IDs introducios no son válidos");
-			;
-		}
+	    if (cambiado) {
+	        System.out.println("Jefe del departamento cambiado con éxito.");
+	    } else {
+	        System.out.println("No se pudo cambiar el jefe del departamento.");
+	    }
 	}
-
+	
 	/*
-	 * Opcion 8 Cambiar el departamento de un empleado
+	 * Opcion 8 cambiar departamento al empleado
 	 */
 	private static void cambiarDepartamentoEmpleado(Empresa empresa) {
-		System.out.print("ID del empleado al que deseas cambiar el departamento: ");
-		String idEmpleado = IO.readString();
+	    System.out.print("ID del empleado al que deseas cambiar el departamento: ");
+	    String empleadoIdInput = IO.readString();
+	    UUID empleadoId = null;
 
-		System.out.print("Nuevo ID del departamento: ");
-		String idDepartamento = IO.readString();
+	    try {
+	        empleadoId = UUID.fromString(empleadoIdInput);
+	    } catch (IllegalArgumentException e) {
+	        System.out.println("ID de empleado no válido.");
+	        return;
+	    }
 
-		try {
-			UUID empleadoID = UUID.fromString(idEmpleado);
-			UUID departamentoID = UUID.fromString(idDepartamento);
+	    System.out.print("ID del nuevo departamento (ENTER para eliminar el departamento actual): ");
+	    String nuevoDepartamentoIdInput = IO.readString();
+	    UUID nuevoDepartamentoId = null;
 
-			Empleado empleado = empresa.obtenerEmpleadoPorID(empleadoID);
-			if (empleado != null) {
-				// Cambiar el departamento del empleado al ID del nuevo departamento
-				empleado.cambiarDepartamento(departamentoID);
-				// Actualizar el registro del empleado en la base de datos
-				boolean actualizado = empresa.actualizarEmpleado(empleado);
+	    if (!nuevoDepartamentoIdInput.isEmpty()) {
+	        try {
+	            nuevoDepartamentoId = UUID.fromString(nuevoDepartamentoIdInput);
+	        } catch (IllegalArgumentException e) {
+	            System.out.println("ID de departamento no válido. No se cambiará el departamento.");
+	        }
+	    }
 
-				if (actualizado) {
-					System.out.println("Departamento del empleado cambiado con éxito.");
-				} else {
-					System.out.println("No se pudo cambiar el departamento del empleado.");
-				}
-			} else {
-				System.out.println("El empleado especificado no existe.");
-			}
-		} catch (Exception e) {
-			System.out.println("Los IDs introducios no son válidos");
-			;
-		}
+	    Departamento nuevoDepartamento = null;
+	    if (nuevoDepartamentoId != null) {
+	        nuevoDepartamento = empresa.obtenerDepartamentoPorID(nuevoDepartamentoId);
+	        if (nuevoDepartamento == null) {
+	            System.out.println("El ID de departamento especificado no corresponde a un departamento existente. No se cambiará el departamento.");
+	            nuevoDepartamentoId = null;
+	        }
+	    }
+
+	    boolean cambiado = empresa.cambiarDepartamentoEmpleado(empleadoId, nuevoDepartamento);
+
+	    if (cambiado) {
+	        System.out.println("Departamento del empleado cambiado con éxito.");
+	    } else {
+	        System.out.println("No se pudo cambiar el departamento del empleado.");
+	    }
 	}
 
+	
 	/*
 	 * Opcion 9 Cerrar programa
 	 */
 	private static void cerrarEmpresa(Empresa empresa) {
 		empresa.close();
 		System.out.println("Empresa cerrada");
+	}
+	
+	/*
+	 * Controla que la fecha introducida sea válida
+	 */
+	public static LocalDate obtenerFechaValida() {
+	    while (true) {
+	        System.out.print("Fecha de ingreso (yyyy-MM-dd): ");
+	        String fechaStr = IO.readString();
+
+	        try {
+	            LocalDate fecha = LocalDate.parse(fechaStr);
+	            return fecha;
+	        } catch (DateTimeParseException e) {
+	            System.out.println("Fecha no válida. Ingresa una fecha en el formato correcto (yyyy-MM-dd).");
+	        }
+	    }
 	}
 }
