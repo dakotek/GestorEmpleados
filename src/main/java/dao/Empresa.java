@@ -104,7 +104,7 @@ public class Empresa {
 	public Departamento obtenerDepartamentoPorID(UUID id) {
 		try (PreparedStatement ps = Menu.conexion.prepareStatement(
 				"SELECT d.id, d.nombre, e.id AS jefe_id, e.nombre AS jefe_nombre, e.salario AS jefe_salario, e.fecha AS jefe_fecha FROM departamentos d LEFT JOIN empleados e ON d.jefe = e.id WHERE d.id = ?")) {
-			ps.setObject(1, id.toString(), java.sql.Types.OTHER);
+			ps.setObject(1, id.toString(), java.sql.Types.VARCHAR);
 			ResultSet rs = ps.executeQuery();
 
 			if (rs.next()) {
@@ -144,7 +144,7 @@ public class Empresa {
 			if (jefeId != null) {
 				ps.setString(2, jefeId);
 			} else {
-				ps.setNull(2, java.sql.Types.VARCHAR); // O usa el tipo de columna real (VARCHAR)
+				ps.setNull(2, java.sql.Types.VARCHAR);
 			}
 
 			ps.setString(3, departamento.getId().toString());
@@ -180,7 +180,7 @@ public class Empresa {
 			if (departamentoId != null) {
 				ps.setString(5, departamentoId);
 			} else {
-				ps.setNull(5, java.sql.Types.VARCHAR); // O usa el tipo de columna real (VARCHAR)
+				ps.setNull(5, java.sql.Types.VARCHAR);
 			}
 
 			int filasAfectadas = ps.executeUpdate();
@@ -223,18 +223,17 @@ public class Empresa {
 		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				String idString = rs.getString("id"); // Obtén el ID como una cadena
-				UUID id = UUID.fromString(idString); // Convierte la cadena en UUID
+				String idString = rs.getString("id");
+				UUID id = UUID.fromString(idString);
 
 				String nombre = rs.getString("nombre");
 				double salario = rs.getDouble("salario");
 				LocalDate fecha = LocalDate.parse(rs.getString("fecha"));
 
-				String departamentoIdString = rs.getString("departamento"); // Obtén el ID del departamento como una
-																			// cadena
+				String departamentoIdString = rs.getString("departamento");
 				UUID departamentoId = null;
 				if (departamentoIdString != null) {
-					departamentoId = UUID.fromString(departamentoIdString); // Convierte la cadena en UUID
+					departamentoId = UUID.fromString(departamentoIdString);
 				}
 
 				Departamento departamento = (departamentoId != null) ? obtenerDepartamentoPorID(departamentoId) : null;
@@ -259,7 +258,7 @@ public class Empresa {
 	public Empleado obtenerEmpleadoPorID(UUID id) {
 		try (PreparedStatement ps = Menu.conexion.prepareStatement(
 				"SELECT e.id, e.nombre, e.salario, e.fecha, e.departamento, d.nombre AS nombre_departamento FROM empleados e LEFT JOIN departamentos d ON e.departamento = d.id WHERE e.id = ?")) {
-			ps.setObject(1, id.toString(), java.sql.Types.OTHER);
+			ps.setObject(1, id.toString(), java.sql.Types.VARCHAR);
 			ResultSet rs = ps.executeQuery();
 
 			if (rs.next()) {
@@ -286,7 +285,7 @@ public class Empresa {
 			e.printStackTrace();
 		}
 
-		return null; // Retorna null si no se encontró el empleado
+		return null;
 	}
 
 	/**
@@ -304,13 +303,12 @@ public class Empresa {
 
 			UUID departamentoId = (empleado.getDepartamento() != null) ? empleado.getDepartamento().getId() : null;
 			if (departamentoId != null) {
-				ps.setObject(4, departamentoId.toString(), java.sql.Types.OTHER);
+				ps.setObject(4, departamentoId.toString(), java.sql.Types.VARCHAR);
 			} else {
-				ps.setNull(4, java.sql.Types.OTHER);
+				ps.setNull(4, java.sql.Types.VARCHAR);
 			}
 
-			ps.setObject(5, empleado.getId().toString(), java.sql.Types.OTHER); // Utiliza setObject para asignar un
-																				// UUID
+			ps.setObject(5, empleado.getId().toString(), java.sql.Types.VARCHAR);
 
 			int filasAfectadas = ps.executeUpdate();
 			return filasAfectadas > 0;
@@ -323,6 +321,9 @@ public class Empresa {
 	/**
 	 * Cambia el jefe al departamento
 	 * 
+	 * @param departamentoId El ID del departamento al que se le cambiará el jefe.
+	 * @param nuevoJefe El nuevo jefe que se asignará al departamento (puede ser nulo para eliminar el jefe actual).
+	 * @return true si se cambió el jefe exitosamente, false en caso contrario.
 	 */
 	public boolean cambiarJefeDepartamento(UUID departamentoId, Empleado nuevoJefe) {
 		String sql = "UPDATE departamentos SET jefe = ? WHERE id = ?";
@@ -347,9 +348,12 @@ public class Empresa {
 		}
 	}
 
-	/*
+	/**
 	 * Cambia departamento al empleado
 	 * 
+	 * @param empleadoId El ID del empleado al que se le cambiará el departamento.
+	 * @param nuevoDepartamento El nuevo departamento al que se asignará el empleado.
+	 * @return true si se cambió el departamento exitosamente, false en caso contrario.
 	 */
 	public boolean cambiarDepartamentoEmpleado(UUID empleadoId, Departamento nuevoDepartamento) {
 		String sql = "UPDATE empleados SET departamento = ? WHERE id = ?";
