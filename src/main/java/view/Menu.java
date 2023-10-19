@@ -1,5 +1,6 @@
 package view;
 
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.UUID;
@@ -8,11 +9,14 @@ import dao.Empresa;
 import io.IO;
 import model.Departamento;
 import model.Empleado;
+import dao.SingletonEmpresa;
 
 public class Menu {
+	public static Connection conexion = SingletonEmpresa.getConnection();
+	
 	public static void main(String[] args) {
 		Empresa empresa = new Empresa();
-
+		
 		while (true) {
 			System.out.println("Selecciona una opción (1 a 9):\n" + "1. Mostrar departamentos\n"
 					+ "2. Agregar departamentos\n" + "3. Eliminar departamentos\n" + "4. Mostrar empleados\n"
@@ -304,7 +308,7 @@ public class Menu {
 	 * Opcion 9 Cerrar programa
 	 */
 	private static void cerrarEmpresa(Empresa empresa) {
-		empresa.close();
+		SingletonEmpresa.close();
 		System.out.println("Empresa cerrada");
 	}
 

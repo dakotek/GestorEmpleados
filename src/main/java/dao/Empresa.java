@@ -1,74 +1,18 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.UUID;
 
 import model.Departamento;
 import model.Empleado;
+import view.Menu;
 
 public class Empresa {
-	Connection conn;
-	String dsn = "jdbc:sqlite:empresa.sqlite";
-	String sql;
 
-	/**
-	 * Constructor
-	 */
-	public Empresa() {
-		try {
-			conn = DriverManager.getConnection(dsn);
-			// Crear las tablas "departamentos" y "empleados" si no existen
-			crearTablaDepartamentos();
-			crearTablaEmpleados();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Cierra la conexión a la BBDD
-	 */
-	public void close() {
-		try {
-			if (conn != null) {
-				conn.close();
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Crea la tabla "departamentos" si no existe en la base de datos
-	 */
-	private void crearTablaDepartamentos() {
-		sql = "CREATE TABLE IF NOT EXISTS departamentos (" + "id STRING PRIMARY KEY," + "nombre STRING,"
-				+ "jefe STRING)";
-		try (Statement stmt = conn.createStatement()) {
-			stmt.execute(sql);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Crea la tabla "empleados" si no existe en la base de datos
-	 */
-	private void crearTablaEmpleados() {
-		sql = "CREATE TABLE IF NOT EXISTS empleados (" + "id STRING PRIMARY KEY," + "nombre STRING,"
-				+ "salario DOUBLE," + "fecha STRING," + "departamento STRING)";
-		try (Statement stmt = conn.createStatement()) {
-			stmt.execute(sql);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
+	private String sql;
 
 	/**
 	 * Agrega un nuevo departamento a la BBDD
@@ -79,20 +23,20 @@ public class Empresa {
 	public boolean agregarDepartamento(Departamento departamento) {
 		sql = "INSERT INTO departamentos (id, nombre, jefe) VALUES (?, ?, ?)";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	    	ps.setString(1, departamento.getId().toString());
-	        ps.setString(2, departamento.getNombre());
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ps.setString(1, departamento.getId().toString());
+			ps.setString(2, departamento.getNombre());
 
-	        UUID jefeId = (departamento.getJefe() != null) ? departamento.getJefe().getId() : null;
-            ps.setObject(3, jefeId, java.sql.Types.VARCHAR);
+			UUID jefeId = (departamento.getJefe() != null) ? departamento.getJefe().getId() : null;
+			ps.setObject(3, jefeId, java.sql.Types.VARCHAR);
 
-	        int filasAfectadas = ps.executeUpdate();
+			int filasAfectadas = ps.executeUpdate();
 
-	        return filasAfectadas > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/**
@@ -102,54 +46,54 @@ public class Empresa {
 	 * @return true si se eliminó con éxito, false si no se pudo eliminar
 	 */
 	public boolean eliminarDepartamento(UUID id) {
-	    sql = "DELETE FROM departamentos WHERE id = ?";
+		sql = "DELETE FROM departamentos WHERE id = ?";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        ps.setString(1, id.toString());
-	        int filasAfectadas = ps.executeUpdate();
-	        return filasAfectadas > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ps.setString(1, id.toString());
+			int filasAfectadas = ps.executeUpdate();
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
+
 	/**
 	 * Muestra todos los departamentos
 	 * 
 	 * @return Una cadena con la lista de departamentos
 	 */
 	public String mostrarDepartamentos() {
-	    StringBuilder sb = new StringBuilder();
-	    sql = "SELECT * FROM departamentos";
+		StringBuilder sb = new StringBuilder();
+		sql = "SELECT * FROM departamentos";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        ResultSet rs = ps.executeQuery();
-	        while (rs.next()) {
-	            UUID id = UUID.fromString(rs.getString("id"));
-	            String nombre = rs.getString("nombre");
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				UUID id = UUID.fromString(rs.getString("id"));
+				String nombre = rs.getString("nombre");
 
-	            String jefeId = rs.getString("jefe");
-	            UUID jefeUUID = null;
-	            if (jefeId != null && !jefeId.isEmpty()) {
-	                jefeUUID = UUID.fromString(jefeId);
-	            }
+				String jefeId = rs.getString("jefe");
+				UUID jefeUUID = null;
+				if (jefeId != null && !jefeId.isEmpty()) {
+					jefeUUID = UUID.fromString(jefeId);
+				}
 
-	            Empleado jefe = null;
-	            if (jefeUUID != null) {
-	                jefe = obtenerEmpleadoPorID(jefeUUID);
-	            }
+				Empleado jefe = null;
+				if (jefeUUID != null) {
+					jefe = obtenerEmpleadoPorID(jefeUUID);
+				}
 
-	            Departamento departamento = new Departamento(id, nombre, jefe);
-	            sb.append(departamento.toString());
-	            sb.append("\n");
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
+				Departamento departamento = new Departamento(id, nombre, jefe);
+				sb.append(departamento.toString());
+				sb.append("\n");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
-	    return sb.toString();
+		return sb.toString();
 	}
-
 
 	/**
 	 * Busca un departamento por su ID
@@ -158,33 +102,29 @@ public class Empresa {
 	 * @return Departamento encontrado o null si no se encuentra
 	 */
 	public Departamento obtenerDepartamentoPorID(UUID id) {
-	    try (PreparedStatement ps = conn.prepareStatement("SELECT d.id, d.nombre, e.id AS jefe_id, e.nombre AS jefe_nombre, e.salario AS jefe_salario, e.fecha AS jefe_fecha FROM departamentos d LEFT JOIN empleados e ON d.jefe = e.id WHERE d.id = ?")) {
-	        ps.setObject(1, id.toString(), java.sql.Types.OTHER);
-	        ResultSet rs = ps.executeQuery();
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(
+				"SELECT d.id, d.nombre, e.id AS jefe_id, e.nombre AS jefe_nombre, e.salario AS jefe_salario, e.fecha AS jefe_fecha FROM departamentos d LEFT JOIN empleados e ON d.jefe = e.id WHERE d.id = ?")) {
+			ps.setObject(1, id.toString(), java.sql.Types.OTHER);
+			ResultSet rs = ps.executeQuery();
 
-	        if (rs.next()) {
-	            UUID departamentoId = UUID.fromString(rs.getString("id"));
-	            String nombre = rs.getString("nombre");
-	            UUID jefeId = UUID.fromString(rs.getString("jefe_id"));
-	            String jefeNombre = rs.getString("jefe_nombre");
-	            double jefeSalario = rs.getDouble("jefe_salario");
-	            LocalDate jefeFecha = LocalDate.parse(rs.getString("jefe_fecha"));
+			if (rs.next()) {
+				UUID departamentoId = UUID.fromString(rs.getString("id"));
+				String nombre = rs.getString("nombre");
+				UUID jefeId = UUID.fromString(rs.getString("jefe_id"));
+				String jefeNombre = rs.getString("jefe_nombre");
+				double jefeSalario = rs.getDouble("jefe_salario");
+				LocalDate jefeFecha = LocalDate.parse(rs.getString("jefe_fecha"));
 
-	            Empleado jefe = new Empleado(jefeId, jefeNombre, jefeSalario, jefeFecha, null);
+				Empleado jefe = new Empleado(jefeId, jefeNombre, jefeSalario, jefeFecha, null);
 
-	            return new Departamento(departamentoId, nombre, jefe);
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
+				return new Departamento(departamentoId, nombre, jefe);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
-	    return null; // Retorna null si no se encontró el departamento
+		return null; // Retorna null si no se encontró el departamento
 	}
-
-
-
-
-
 
 	/**
 	 * Actualiza un departamento en la BBDD
@@ -193,29 +133,29 @@ public class Empresa {
 	 * @return true si se actualizó con éxito, false si no se pudo actualizar
 	 */
 	public boolean actualizarDepartamento(Departamento departamento) {
-	    String sql = "UPDATE departamentos SET nombre = ?, jefe = ? WHERE id = ?";
+		String sql = "UPDATE departamentos SET nombre = ?, jefe = ? WHERE id = ?";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        ps.setString(1, departamento.getNombre());
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ps.setString(1, departamento.getNombre());
 
-	        // Verifica si el jefe no es nulo antes de asignarlo
-	        String jefeId = (departamento.getJefe() != null) ? departamento.getJefe().getId().toString() : null;
+			// Verifica si el jefe no es nulo antes de asignarlo
+			String jefeId = (departamento.getJefe() != null) ? departamento.getJefe().getId().toString() : null;
 
-	        if (jefeId != null) {
-	            ps.setString(2, jefeId);
-	        } else {
-	            ps.setNull(2, java.sql.Types.VARCHAR); // O usa el tipo de columna real (VARCHAR)
-	        }
+			if (jefeId != null) {
+				ps.setString(2, jefeId);
+			} else {
+				ps.setNull(2, java.sql.Types.VARCHAR); // O usa el tipo de columna real (VARCHAR)
+			}
 
-	        ps.setString(3, departamento.getId().toString());
+			ps.setString(3, departamento.getId().toString());
 
-	        int filasAfectadas = ps.executeUpdate();
+			int filasAfectadas = ps.executeUpdate();
 
-	        return filasAfectadas > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/**
@@ -225,30 +165,31 @@ public class Empresa {
 	 * @return true si se agregó con éxito, false si no se pudo agregar
 	 */
 	public boolean agregarEmpleado(Empleado empleado) {
-	    String sql = "INSERT INTO empleados (id, nombre, salario, fecha, departamento) VALUES (?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO empleados (id, nombre, salario, fecha, departamento) VALUES (?, ?, ?, ?, ?)";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        ps.setString(1, empleado.getId().toString());
-	        ps.setString(2, empleado.getNombre());
-	        ps.setDouble(3, empleado.getSalario());
-	        ps.setString(4, empleado.getFecha().toString());
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ps.setString(1, empleado.getId().toString());
+			ps.setString(2, empleado.getNombre());
+			ps.setDouble(3, empleado.getSalario());
+			ps.setString(4, empleado.getFecha().toString());
 
-	        // Verifica si el empleado tiene un departamento antes de asignarlo
-	        String departamentoId = (empleado.getDepartamento() != null) ? empleado.getDepartamento().getId().toString() : null;
+			// Verifica si el empleado tiene un departamento antes de asignarlo
+			String departamentoId = (empleado.getDepartamento() != null) ? empleado.getDepartamento().getId().toString()
+					: null;
 
-	        if (departamentoId != null) {
-	            ps.setString(5, departamentoId);
-	        } else {
-	            ps.setNull(5, java.sql.Types.VARCHAR); // O usa el tipo de columna real (VARCHAR)
-	        }
+			if (departamentoId != null) {
+				ps.setString(5, departamentoId);
+			} else {
+				ps.setNull(5, java.sql.Types.VARCHAR); // O usa el tipo de columna real (VARCHAR)
+			}
 
-	        int filasAfectadas = ps.executeUpdate();
+			int filasAfectadas = ps.executeUpdate();
 
-	        return filasAfectadas > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/**
@@ -258,16 +199,16 @@ public class Empresa {
 	 * @return true si se eliminó con éxito, false si no se pudo eliminar
 	 */
 	public boolean eliminarEmpleado(UUID id) {
-	    sql = "DELETE FROM empleados WHERE id = ?";
+		sql = "DELETE FROM empleados WHERE id = ?";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        ps.setString(1, id.toString());
-	        int filasAfectadas = ps.executeUpdate();
-	        return filasAfectadas > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ps.setString(1, id.toString());
+			int filasAfectadas = ps.executeUpdate();
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/**
@@ -276,36 +217,37 @@ public class Empresa {
 	 * @return Una cadena con la lista de empleados
 	 */
 	public String mostrarEmpleados() {
-	    StringBuilder sb = new StringBuilder();
-	    sql = "SELECT * FROM empleados";
+		StringBuilder sb = new StringBuilder();
+		sql = "SELECT * FROM empleados";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        ResultSet rs = ps.executeQuery();
-	        while (rs.next()) {
-	            String idString = rs.getString("id"); // Obtén el ID como una cadena
-	            UUID id = UUID.fromString(idString); // Convierte la cadena en UUID
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				String idString = rs.getString("id"); // Obtén el ID como una cadena
+				UUID id = UUID.fromString(idString); // Convierte la cadena en UUID
 
-	            String nombre = rs.getString("nombre");
-	            double salario = rs.getDouble("salario");
-	            LocalDate fecha = LocalDate.parse(rs.getString("fecha"));
+				String nombre = rs.getString("nombre");
+				double salario = rs.getDouble("salario");
+				LocalDate fecha = LocalDate.parse(rs.getString("fecha"));
 
-	            String departamentoIdString = rs.getString("departamento"); // Obtén el ID del departamento como una cadena
-	            UUID departamentoId = null;
-	            if (departamentoIdString != null) {
-	                departamentoId = UUID.fromString(departamentoIdString); // Convierte la cadena en UUID
-	            }
+				String departamentoIdString = rs.getString("departamento"); // Obtén el ID del departamento como una
+																			// cadena
+				UUID departamentoId = null;
+				if (departamentoIdString != null) {
+					departamentoId = UUID.fromString(departamentoIdString); // Convierte la cadena en UUID
+				}
 
-	            Departamento departamento = (departamentoId != null) ? obtenerDepartamentoPorID(departamentoId) : null;
+				Departamento departamento = (departamentoId != null) ? obtenerDepartamentoPorID(departamentoId) : null;
 
-	            Empleado empleado = new Empleado(id, nombre, salario, fecha, departamento);
-	            sb.append(empleado.toString());
-	            sb.append("\n");
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
+				Empleado empleado = new Empleado(id, nombre, salario, fecha, departamento);
+				sb.append(empleado.toString());
+				sb.append("\n");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
-	    return sb.toString();
+		return sb.toString();
 	}
 
 	/**
@@ -315,38 +257,37 @@ public class Empresa {
 	 * @return Empleado encontrado o null si no se encuentra
 	 */
 	public Empleado obtenerEmpleadoPorID(UUID id) {
-	    try (PreparedStatement ps = conn.prepareStatement("SELECT e.id, e.nombre, e.salario, e.fecha, e.departamento, d.nombre AS nombre_departamento FROM empleados e LEFT JOIN departamentos d ON e.departamento = d.id WHERE e.id = ?")) {
-	        ps.setObject(1, id.toString(), java.sql.Types.OTHER);
-	        ResultSet rs = ps.executeQuery();
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(
+				"SELECT e.id, e.nombre, e.salario, e.fecha, e.departamento, d.nombre AS nombre_departamento FROM empleados e LEFT JOIN departamentos d ON e.departamento = d.id WHERE e.id = ?")) {
+			ps.setObject(1, id.toString(), java.sql.Types.OTHER);
+			ResultSet rs = ps.executeQuery();
 
-	        if (rs.next()) {
-	            UUID empleadoId = UUID.fromString(rs.getString("id"));
-	            String nombre = rs.getString("nombre");
-	            double salario = rs.getDouble("salario");
-	            LocalDate fecha = LocalDate.parse(rs.getString("fecha"));
-	            String departamentoIdString = rs.getString("departamento");
-	            UUID departamentoId = null;
+			if (rs.next()) {
+				UUID empleadoId = UUID.fromString(rs.getString("id"));
+				String nombre = rs.getString("nombre");
+				double salario = rs.getDouble("salario");
+				LocalDate fecha = LocalDate.parse(rs.getString("fecha"));
+				String departamentoIdString = rs.getString("departamento");
+				UUID departamentoId = null;
 
-	            if (departamentoIdString != null && !departamentoIdString.isEmpty()) {
-	                departamentoId = UUID.fromString(departamentoIdString);
-	            }
+				if (departamentoIdString != null && !departamentoIdString.isEmpty()) {
+					departamentoId = UUID.fromString(departamentoIdString);
+				}
 
-	            String nombreDepartamento = rs.getString("nombre_departamento");
+				String nombreDepartamento = rs.getString("nombre_departamento");
 
-	            Departamento departamento = (departamentoId != null) ? new Departamento(departamentoId, nombreDepartamento, null) : null;
+				Departamento departamento = (departamentoId != null)
+						? new Departamento(departamentoId, nombreDepartamento, null)
+						: null;
 
-	            return new Empleado(empleadoId, nombre, salario, fecha, departamento);
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
+				return new Empleado(empleadoId, nombre, salario, fecha, departamento);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
-	    return null; // Retorna null si no se encontró el empleado
+		return null; // Retorna null si no se encontró el empleado
 	}
-
-
-
-
 
 	/**
 	 * Actualiza un empleado en la BBDD
@@ -355,83 +296,82 @@ public class Empresa {
 	 * @return true si se actualizó con éxito, false si no se pudo actualizar
 	 */
 	public boolean actualizarEmpleado(Empleado empleado) {
-	    String sql = "UPDATE empleados SET nombre = ?, salario = ?, fecha = ?, departamento = ? WHERE id = ?";
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        ps.setString(1, empleado.getNombre());
-	        ps.setDouble(2, empleado.getSalario());
-	        ps.setObject(3, empleado.getFecha(), java.sql.Types.DATE);
+		String sql = "UPDATE empleados SET nombre = ?, salario = ?, fecha = ?, departamento = ? WHERE id = ?";
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ps.setString(1, empleado.getNombre());
+			ps.setDouble(2, empleado.getSalario());
+			ps.setObject(3, empleado.getFecha(), java.sql.Types.DATE);
 
-	        UUID departamentoId = (empleado.getDepartamento() != null) ? empleado.getDepartamento().getId() : null;
-	        if (departamentoId != null) {
-	            ps.setObject(4, departamentoId.toString(), java.sql.Types.OTHER);
-	        } else {
-	            ps.setNull(4, java.sql.Types.OTHER);
-	        }
+			UUID departamentoId = (empleado.getDepartamento() != null) ? empleado.getDepartamento().getId() : null;
+			if (departamentoId != null) {
+				ps.setObject(4, departamentoId.toString(), java.sql.Types.OTHER);
+			} else {
+				ps.setNull(4, java.sql.Types.OTHER);
+			}
 
-	        ps.setObject(5, empleado.getId().toString(), java.sql.Types.OTHER); // Utiliza setObject para asignar un UUID
+			ps.setObject(5, empleado.getId().toString(), java.sql.Types.OTHER); // Utiliza setObject para asignar un
+																				// UUID
 
-	        int filasAfectadas = ps.executeUpdate();
-	        return filasAfectadas > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
+			int filasAfectadas = ps.executeUpdate();
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
-	
+
 	/**
 	 * Cambia el jefe al departamento
 	 * 
 	 */
 	public boolean cambiarJefeDepartamento(UUID departamentoId, Empleado nuevoJefe) {
-	    String sql = "UPDATE departamentos SET jefe = ? WHERE id = ?";
+		String sql = "UPDATE departamentos SET jefe = ? WHERE id = ?";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        // Establece el ID del nuevo jefe
-	        if (nuevoJefe != null) {
-	            ps.setString(1, nuevoJefe.getId().toString());
-	        } else {
-	            ps.setNull(1, java.sql.Types.VARCHAR);
-	        }
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			// Establece el ID del nuevo jefe
+			if (nuevoJefe != null) {
+				ps.setString(1, nuevoJefe.getId().toString());
+			} else {
+				ps.setNull(1, java.sql.Types.VARCHAR);
+			}
 
-	        // Establece el ID del departamento
-	        ps.setString(2, departamentoId.toString());
+			// Establece el ID del departamento
+			ps.setString(2, departamentoId.toString());
 
-	        int filasAfectadas = ps.executeUpdate();
+			int filasAfectadas = ps.executeUpdate();
 
-	        return filasAfectadas > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
-	
+
 	/*
 	 * Cambia departamento al empleado
 	 * 
 	 */
 	public boolean cambiarDepartamentoEmpleado(UUID empleadoId, Departamento nuevoDepartamento) {
-	    String sql = "UPDATE empleados SET departamento = ? WHERE id = ?";
+		String sql = "UPDATE empleados SET departamento = ? WHERE id = ?";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        // Establece el ID del nuevo departamento
-	        if (nuevoDepartamento != null) {
-	            ps.setString(1, nuevoDepartamento.getId().toString());	
-	        } else {
-	            ps.setNull(1, java.sql.Types.VARCHAR);
-	        }
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			// Establece el ID del nuevo departamento
+			if (nuevoDepartamento != null) {
+				ps.setString(1, nuevoDepartamento.getId().toString());
+			} else {
+				ps.setNull(1, java.sql.Types.VARCHAR);
+			}
 
-	        // Establece el ID del empleado
-	        ps.setString(2, empleadoId.toString());
+			// Establece el ID del empleado
+			ps.setString(2, empleadoId.toString());
 
-	        int filasAfectadas = ps.executeUpdate();
+			int filasAfectadas = ps.executeUpdate();
 
-	        return filasAfectadas > 0;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
+			return filasAfectadas > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
-
-
 
 }
