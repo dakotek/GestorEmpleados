@@ -1,4 +1,5 @@
 package dao;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,8 +8,10 @@ import java.util.UUID;
 import model.Departamento;
 import model.Empleado;
 import view.Menu;
+
 public class Empresa {
 	private String sql;
+
 	/**
 	 * Agrega un nuevo departamento a la BBDD
 	 * 
@@ -29,6 +32,7 @@ public class Empresa {
 			return false;
 		}
 	}
+
 	/**
 	 * Elimina un departamento de la BBDD por su ID
 	 * 
@@ -47,6 +51,7 @@ public class Empresa {
 			return false;
 		}
 	}
+
 	/**
 	 * Muestra todos los departamentos
 	 * 
@@ -78,6 +83,7 @@ public class Empresa {
 		}
 		return sb.toString();
 	}
+
 	/**
 	 * Busca un departamento por su ID
 	 * 
@@ -87,7 +93,6 @@ public class Empresa {
 	public Departamento obtenerDepartamentoPorID(UUID id) {
 		try (PreparedStatement ps = Menu.conexion.prepareStatement(
 				"SELECT d.id, d.nombre, e.id AS jefe_id, e.nombre AS jefe_nombre, e.salario AS jefe_salario, e.fecha AS jefe_fecha FROM departamentos d LEFT JOIN empleados e ON d.jefe = e.id WHERE d.id = ?")) {
-			ps.setObject(1, id.toString(), java.sql.Types.OTHER);
 			ps.setObject(1, id.toString(), java.sql.Types.VARCHAR);
 			ResultSet rs = ps.executeQuery();
 
@@ -104,8 +109,9 @@ public class Empresa {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return null; // Retorna null si no se encontró el departamento
+		return null;
 	}
+
 	/**
 	 * Actualiza un departamento en la BBDD
 	 * 
@@ -121,7 +127,6 @@ public class Empresa {
 			if (jefeId != null) {
 				ps.setString(2, jefeId);
 			} else {
-				ps.setNull(2, java.sql.Types.VARCHAR); // O usa el tipo de columna real (VARCHAR)
 				ps.setNull(2, java.sql.Types.VARCHAR);
 			}
 
@@ -133,6 +138,7 @@ public class Empresa {
 			return false;
 		}
 	}
+
 	/**
 	 * Agrega un nuevo empleado a la BBDD
 	 * 
@@ -152,7 +158,6 @@ public class Empresa {
 			if (departamentoId != null) {
 				ps.setString(5, departamentoId);
 			} else {
-				ps.setNull(5, java.sql.Types.VARCHAR); // O usa el tipo de columna real (VARCHAR)
 				ps.setNull(5, java.sql.Types.VARCHAR);
 			}
 
@@ -163,6 +168,7 @@ public class Empresa {
 			return false;
 		}
 	}
+
 	/**
 	 * Elimina un empleado de la BBDD por su ID
 	 * 
@@ -181,6 +187,7 @@ public class Empresa {
 			return false;
 		}
 	}
+
 	/**
 	 * Muestra todos los empleados
 	 * 
@@ -202,7 +209,6 @@ public class Empresa {
 				String departamentoIdString = rs.getString("departamento");
 				UUID departamentoId = null;
 				if (departamentoIdString != null) {
-					departamentoId = UUID.fromString(departamentoIdString); // Convierte la cadena en UUID
 					departamentoId = UUID.fromString(departamentoIdString);
 				}
 
@@ -216,6 +222,7 @@ public class Empresa {
 		}
 		return sb.toString();
 	}
+
 	/**
 	 * Busca un empleado por su ID
 	 * 
@@ -225,7 +232,6 @@ public class Empresa {
 	public Empleado obtenerEmpleadoPorID(UUID id) {
 		try (PreparedStatement ps = Menu.conexion.prepareStatement(
 				"SELECT e.id, e.nombre, e.salario, e.fecha, e.departamento, d.nombre AS nombre_departamento FROM empleados e LEFT JOIN departamentos d ON e.departamento = d.id WHERE e.id = ?")) {
-			ps.setObject(1, id.toString(), java.sql.Types.OTHER);
 			ps.setObject(1, id.toString(), java.sql.Types.VARCHAR);
 			ResultSet rs = ps.executeQuery();
 
@@ -267,15 +273,11 @@ public class Empresa {
 
 			UUID departamentoId = (empleado.getDepartamento() != null) ? empleado.getDepartamento().getId() : null;
 			if (departamentoId != null) {
-				ps.setObject(4, departamentoId.toString(), java.sql.Types.OTHER);
 				ps.setObject(4, departamentoId.toString(), java.sql.Types.VARCHAR);
 			} else {
-				ps.setNull(4, java.sql.Types.OTHER);
 				ps.setNull(4, java.sql.Types.VARCHAR);
 			}
 
-			ps.setObject(5, empleado.getId().toString(), java.sql.Types.OTHER); // Utiliza setObject para asignar un
-																				// UUID
 			ps.setObject(5, empleado.getId().toString(), java.sql.Types.VARCHAR);
 
 			int filasAfectadas = ps.executeUpdate();
@@ -285,6 +287,7 @@ public class Empresa {
 			return false;
 		}
 	}
+
 	/**
 	 * Cambia el jefe al departamento
 	 * 
@@ -294,24 +297,34 @@ public class Empresa {
 	 */
 	public boolean cambiarJefeDepartamento(UUID departamentoId, Empleado nuevoJefe) {
 		String sql = "UPDATE departamentos SET jefe = ? WHERE id = ?";
+
 		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
-			// Establece el ID del nuevo jefe
 			if (nuevoJefe != null) {
 				ps.setString(1, nuevoJefe.getId().toString());
 			} else {
 				ps.setNull(1, java.sql.Types.VARCHAR);
 			}
-			// Establece el ID del departamento
 			ps.setString(2, departamentoId.toString());
+
 			int filasAfectadas = ps.executeUpdate();
-			return filasAfectadas > 0;
+
+			if (filasAfectadas > 0) {
+				// Actualiza el departamento del nuevo jefe
+				if (nuevoJefe != null) {
+					nuevoJefe.setDepartamento(obtenerDepartamentoPorID(departamentoId));
+					actualizarEmpleado(nuevoJefe);
+				}
+
+				return true;
+			} else {
+				return false;
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
 		}
 	}
 
-	/*
 	/**
 	 * Cambia departamento al empleado
 	 * 
@@ -328,7 +341,6 @@ public class Empresa {
 			} else {
 				ps.setNull(1, java.sql.Types.VARCHAR);
 			}
-			// Establece el ID del empleado
 			ps.setString(2, empleadoId.toString());
 			int filasAfectadas = ps.executeUpdate();
 			return filasAfectadas > 0;
@@ -337,31 +349,41 @@ public class Empresa {
 			return false;
 		}
 	}
-	
+
+	/**
+	 * Actualiza a NULL el departamento de todos los empleados que pertenecían al departamento eliminado.
+	 *
+	 * @param idDepartamentoDesaparecido El ID del departamento que ha desaparecido.
+	 */
 	public void actualizarEmpleadosDespuesDeEliminarDepartamento(UUID idDepartamentoDesaparecido) {
-	    String sql = "UPDATE empleados SET departamento = NULL WHERE departamento = ?";
-	    
-	    try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
-	        ps.setString(1, idDepartamentoDesaparecido.toString());
-	        
-	        int filasAfectadas = ps.executeUpdate();
-	        System.out.println("Número de empleados actualizados: " + filasAfectadas);
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
+		String sql = "UPDATE empleados SET departamento = NULL WHERE departamento = ?";
+
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ps.setString(1, idDepartamentoDesaparecido.toString());
+
+			int filasAfectadas = ps.executeUpdate();
+			System.out.println("Número de empleados actualizados: " + filasAfectadas);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
-	
+
+	/**
+	 * Actualiza a NULL el jefe de todos los departamentos que tenían al jefe que se ha eliminado.
+	 *
+	 * @param idJefeDesaparecido El ID del jefe que ha desaparecido.
+	 */
 	public void actualizarDepartamentosDespuesDeEliminarJefe(UUID idJefeDesaparecido) {
-	    String sql = "UPDATE departamentos SET jefe = NULL WHERE jefe = ?";
-	    
-	    try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
-	        ps.setString(1, idJefeDesaparecido.toString());
-	        
-	        int filasAfectadas = ps.executeUpdate();
-	        System.out.println("Número de departamentos actualizados: " + filasAfectadas);
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
+		String sql = "UPDATE departamentos SET jefe = NULL WHERE jefe = ?";
+
+		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+			ps.setString(1, idJefeDesaparecido.toString());
+
+			int filasAfectadas = ps.executeUpdate();
+			System.out.println("Número de departamentos actualizados: " + filasAfectadas);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
