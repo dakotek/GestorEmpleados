@@ -39,7 +39,6 @@ public class SingletonEmpresa {
 			conn = DriverManager.getConnection(dsn, dbUser, dbPassword);
 			crearTablaDepartamentos();
 			crearTablaEmpleados();
-			System.out.println("CONECTADO A LA BBDD " + dbName);
 		} catch (SQLException e) {
 			System.err.println("Error al conectar a la base de datos: " + e.getMessage());
 		} catch (ClassNotFoundException e) {

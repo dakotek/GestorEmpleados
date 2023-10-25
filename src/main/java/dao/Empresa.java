@@ -327,25 +327,37 @@ public class Empresa {
 	 */
 	public boolean cambiarJefeDepartamento(UUID departamentoId, Empleado nuevoJefe) {
 		String sql = "UPDATE departamentos SET jefe = ? WHERE id = ?";
+	    
+	    // Obtén el departamento actual del jefe anterior
+	    Departamento departamentoAnterior = obtenerDepartamentoPorID(nuevoJefe.getDepartamento().getId());
 
-		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
-			// Establece el ID del nuevo jefe
-			if (nuevoJefe != null) {
-				ps.setString(1, nuevoJefe.getId().toString());
-			} else {
-				ps.setNull(1, java.sql.Types.VARCHAR);
-			}
-
-			// Establece el ID del departamento
-			ps.setString(2, departamentoId.toString());
-
-			int filasAfectadas = ps.executeUpdate();
-
-			return filasAfectadas > 0;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
+	    try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
+	        // Establece el ID del nuevo jefe
+	        if (nuevoJefe != null) {
+	            ps.setString(1, nuevoJefe.getId().toString());
+	        }
+	        // Establece el ID del departamento
+	        ps.setString(2, departamentoId.toString());
+	        
+	        int filasAfectadas = ps.executeUpdate();
+	        
+	        if (filasAfectadas > 0) {
+	            // Si se cambió el jefe del departamento, actualiza el departamento anterior del jefe y el nuevo departamento del jefe
+	            if (departamentoAnterior != null) {
+	                departamentoAnterior.setJefe(null); // Quita al jefe del departamento anterior
+	                actualizarDepartamento(departamentoAnterior); // Actualiza el departamento anterior
+	            }
+	            if (nuevoJefe != null) {
+	                nuevoJefe.setDepartamento(obtenerDepartamentoPorID(departamentoId)); // Establece el nuevo departamento al jefe
+	                actualizarEmpleado(nuevoJefe); // Actualiza el nuevo jefe
+	            }
+	            return true;
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    
+	    return false;
 	}
 
 	/**
