@@ -151,7 +151,7 @@ public class Menu {
 		if (nombre != null && !nombre.isEmpty()) {
 			System.out.print("Salario: ");
 			double salario = IO.readDouble();
-			LocalDate fecha = obtenerFechaValida();
+			LocalDate nacido = obtenerFechaValida();
 
 			System.out.print("ID del departamento (ENTER para no añadir): ");
 			String departamentoIdInput = IO.readString();
@@ -174,7 +174,7 @@ public class Menu {
 				}
 			}
 
-			Empleado empleado = new Empleado(nombre, salario, fecha, departamento);
+			Empleado empleado = new Empleado(nombre, salario, nacido, departamento);
 
 			boolean agregado = empresa.agregarEmpleado(empleado);
 

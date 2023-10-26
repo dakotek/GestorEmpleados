@@ -14,14 +14,14 @@ public class Empleado {
 	private UUID id; 
 	private String nombre; 
 	private Double salario; 
-	private LocalDate fecha;
+	private LocalDate nacido;
 	private Departamento departamento;
 
-	public Empleado(String nombre, Double salario, LocalDate fecha, Departamento departamento) {
+	public Empleado(String nombre, Double salario, LocalDate nacido, Departamento departamento) {
 		setId(UUID.randomUUID());
 		setNombre(nombre);
 		setSalario(salario);
-		setFecha(fecha);
+		setNacido(nacido);
 		setDepartamento(departamento);
 	}
 	
@@ -31,7 +31,7 @@ public class Empleado {
 	
 	public String toString() {
 		String departamentoStr = (departamento != null) ? departamento.getNombre() : "Sin departamento";
-	    return String.format("ID: %s, Nombre: %s, Salario: %.2f, Fecha: %s, Departamento: %s", id.toString(), nombre, salario, fecha.toString(), departamentoStr);
+	    return String.format("ID: %s, Nombre: %s, Salario: %.2f, Nacido: %s, Departamento: %s", id.toString(), nombre, salario, nacido.toString(), departamentoStr);
 		
 	}
 }

@@ -151,7 +151,7 @@ public class Empresa {
 			ps.setString(1, empleado.getId().toString());
 			ps.setString(2, empleado.getNombre());
 			ps.setDouble(3, empleado.getSalario());
-			ps.setString(4, empleado.getFecha().toString());
+			ps.setString(4, empleado.getNacido().toString());
 			// Verifica si el empleado tiene un departamento antes de asignarlo
 			String departamentoId = (empleado.getDepartamento() != null) ? empleado.getDepartamento().getId().toString()
 					: null;
@@ -204,7 +204,7 @@ public class Empresa {
 
 				String nombre = rs.getString("nombre");
 				double salario = rs.getDouble("salario");
-				LocalDate fecha = LocalDate.parse(rs.getString("fecha"));
+				LocalDate nacido = LocalDate.parse(rs.getString("fecha"));
 
 				String departamentoIdString = rs.getString("departamento");
 				UUID departamentoId = null;
@@ -213,7 +213,7 @@ public class Empresa {
 				}
 
 				Departamento departamento = (departamentoId != null) ? obtenerDepartamentoPorID(departamentoId) : null;
-				Empleado empleado = new Empleado(id, nombre, salario, fecha, departamento);
+				Empleado empleado = new Empleado(id, nombre, salario, nacido, departamento);
 				sb.append(empleado.toString());
 				sb.append("\n");
 			}
@@ -239,7 +239,7 @@ public class Empresa {
 				UUID empleadoId = UUID.fromString(rs.getString("id"));
 				String nombre = rs.getString("nombre");
 				double salario = rs.getDouble("salario");
-				LocalDate fecha = LocalDate.parse(rs.getString("fecha"));
+				LocalDate nacido = LocalDate.parse(rs.getString("fecha"));
 				String departamentoIdString = rs.getString("departamento");
 				UUID departamentoId = null;
 				if (departamentoIdString != null && !departamentoIdString.isEmpty()) {
@@ -249,7 +249,7 @@ public class Empresa {
 				Departamento departamento = (departamentoId != null)
 						? new Departamento(departamentoId, nombreDepartamento, null)
 						: null;
-				return new Empleado(empleadoId, nombre, salario, fecha, departamento);
+				return new Empleado(empleadoId, nombre, salario, nacido, departamento);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -269,7 +269,7 @@ public class Empresa {
 		try (PreparedStatement ps = Menu.conexion.prepareStatement(sql)) {
 			ps.setString(1, empleado.getNombre());
 			ps.setDouble(2, empleado.getSalario());
-			ps.setObject(3, empleado.getFecha(), java.sql.Types.DATE);
+			ps.setObject(3, empleado.getNacido(), java.sql.Types.DATE);
 
 			UUID departamentoId = (empleado.getDepartamento() != null) ? empleado.getDepartamento().getId() : null;
 			if (departamentoId != null) {
